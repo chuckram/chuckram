@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+#  chuckramd The chuckram core server.
+#
+#
+# chkconfig: 345 80 20
+# description: chuckramd
+# processname: chuckramd
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+# you can override defaults in /etc/sysconfig/chuckramd, see below
+if [ -f /etc/sysconfig/chuckramd ]; then
+        . /etc/sysconfig/chuckramd
+fi
+
+RETVAL=0
+
+prog=chuckramd
+# you can override the lockfile via CHUCKRAMD_LOCKFILE in /etc/sysconfig/chuckramd
+lockfile=${CHUCKRAMD_LOCKFILE-/var/lock/subsys/chuckramd}
+
+# chuckramd defaults to /usr/bin/chuckramd, override with CHUCKRAMD_BIN
+chuckramd=${CHUCKRAMD_BIN-/usr/bin/chuckramd}
+
+# chuckramd opts default to -disablewallet, override with CHUCKRAMD_OPTS
+chuckramd_opts=${CHUCKRAMD_OPTS--disablewallet}
+
+start() {
+    echo -n $"Starting $prog: "
+    daemon $DAEMONOPTS $chuckramd $chuckramd_opts
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch $lockfile
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc $prog
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f $lockfile
+    return $RETVAL
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status $prog
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: service $prog {start|stop|status|restart}"
+        exit 1
+        ;;
+esac
